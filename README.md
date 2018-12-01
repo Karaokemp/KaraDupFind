@@ -3,5 +3,8 @@ A tool for finding duplicate audio files in a directory
 
 Runs on Python 2.7
 
+Packages:
+TBD
+
 Requires FFMPEG:
 http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
