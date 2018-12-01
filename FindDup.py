@@ -73,11 +73,12 @@ def findDups():
                 try:
                     print("Moving "+songs_path +"/"+checkboxvar.get())
                     os.rename(songs_path +"/"+checkboxvar.get(), dups_dir+checkboxvar.get())
-                except WindowsError:
+                except OSError:
+                    print("Error - most probably file already moved.")
                     pass
                 for checkbox in checkboxes:
                     if checkbox["onvalue"]==checkboxvar.get():
-                        checkboxes.reverse(checkbox)
+                        checkboxes.remove(checkbox)
                         checkbox.deselect()
                         checkbox.destroy()
 #               subprocess.call(['start', (songs_path +"/"+checkbox.get()).encode('ascii', 'ignore')])
