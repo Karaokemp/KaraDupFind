@@ -15,7 +15,6 @@ mutagen==1.21
 mutagenwrapper==0.0.5
 numpy==1.15.3
 packaging==18.0
-pip-check-reqs==2.0.3
 PyAudio==0.2.11
 -e git+https://github.com/tyiannak/pyAudioAnalysis.git@cee48de0df203a104a03195b41a78c2adcf9879d#egg=pyAudioAnalysis
 pycparser==2.19
