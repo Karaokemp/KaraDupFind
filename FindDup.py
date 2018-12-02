@@ -50,7 +50,7 @@ def findDups():
 
     # Create dejavu object
     config = {
-        #"fingerprint_limit" : 150, #seconds. some files may have differfent trailing - no need to account for this
+        "fingerprint_limit" : 150, #seconds. some files may have differfent trailing - no need to account for this
         "database_type": "sqlite",
         "database": {
             "db": img_dir+'kara_find_duplicates',
