@@ -181,6 +181,10 @@ def findDups():
         if file.endswith(".mp3") or file.endswith(".wav") or file.endswith(".m4a") or file.endswith(".mp4") or file.endswith(".flac"):
             os.remove(os.path.join(img_dir, file))
 
+    def win_quit():
+        master.destroy()
+
+    master.protocol("WM_DELETE_WINDOW", win_quit)
     root.update()
     btn.lift()  # make sure it's always visible, even when scrollbar scrolls items on top of it
     master.update()
