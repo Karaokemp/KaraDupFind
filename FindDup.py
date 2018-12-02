@@ -76,6 +76,7 @@ def findDups():
                 try:
                     print("Moving "+songs_path +"/"+checkboxvar.get())
                     os.rename(songs_path +"/"+checkboxvar.get(), dups_dir+checkboxvar.get())
+                    os.rename(songs_path + "/" + checkboxvar.get()[0:-4]+".cdg", dups_dir + checkboxvar.get()[0:-4]+".cdg")
                 except OSError:
                     print("Error - most probably file already moved.")
                     pass
@@ -109,6 +110,8 @@ def findDups():
     checkboxes = []
     checkboxesvars = []
 
+    starttime = time.time()
+    found = 0
     for idx, val in enumerate(files):
         #if idx>4:
         #    continue
@@ -131,6 +134,7 @@ def findDups():
         checkboxes.append(l2)
         l2.deselect()
         l2.pack(fill=BOTH)
+        found += 1
 
         found_identical = False
 
@@ -172,9 +176,9 @@ def findDups():
                 l1.pack_forget()
                 l0.pack_forget()
                 l2.pack_forget()
+                found -= 1
 
-
-    print("Analysis done")
+    print("\n"+str(found)+" files have duplicates (analysis took " + str(int(time.time() - starttime)) + " seconds)")
 
     # remove temporary files. TODO remove the whole directory, including the database
     for file in os.listdir(img_dir):
@@ -182,9 +186,12 @@ def findDups():
             os.remove(os.path.join(img_dir, file))
 
     def win_quit():
-        master.destroy()
+        print("Goodbye")
+        master.quit()
 
     master.protocol("WM_DELETE_WINDOW", win_quit)
+    w, h = master.winfo_screenwidth(), master.winfo_screenheight()
+    master.geometry("%dx%d+0+0" % (w, h))
     root.update()
     btn.lift()  # make sure it's always visible, even when scrollbar scrolls items on top of it
     master.update()
