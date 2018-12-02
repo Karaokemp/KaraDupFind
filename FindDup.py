@@ -1,6 +1,7 @@
 """ Requires Python 2.7 """
 
 from Tkinter import *
+import time
 #from Tkinter import filedialog  ## python3.6
 import tkFileDialog
 import os
@@ -49,7 +50,7 @@ def findDups():
 
     # Create dejavu object
     config = {
-        "fingerprint_limit" : 150, #seconds. some files may have differfent trailing - no need to account for this
+        #"fingerprint_limit" : 150, #seconds. some files may have differfent trailing - no need to account for this
         "database_type": "sqlite",
         "database": {
             "db": img_dir+'kara_find_duplicates',
@@ -59,7 +60,9 @@ def findDups():
 
     print("Building database of songs...")
     # #fingerprint all files
+    starttime = time.time()
     djv.fingerprint_directory(img_dir.replace('\\', '/'), [".mp3",".wav",".m4a",".mp4",".flac"], 0)
+    print("Done fingerprinting ("+str(int(time.time()-starttime))+" seconds)")
 
     #print(djv.db.get_num_fingerprints())
     #for line in djv.db.cursor().conn.iterdump():
