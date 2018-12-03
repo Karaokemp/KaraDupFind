@@ -78,7 +78,7 @@ def findDups():
                     os.rename(songs_path +"/"+checkboxvar.get(), dups_dir+checkboxvar.get())
                     os.rename(songs_path + "/" + checkboxvar.get()[0:-4]+".cdg", dups_dir + checkboxvar.get()[0:-4]+".cdg")
                 except OSError:
-                    print("Error - most probably file already moved.")
+                    #print("Error - most probably file already moved.")
                     pass
                 for checkbox in checkboxes:
                     if checkbox["onvalue"]==checkboxvar.get():
