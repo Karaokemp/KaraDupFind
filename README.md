@@ -5,7 +5,8 @@ Runs on Python 2.7
 
 Packages:
 See requirement.txt
-Also, on windows some packages need to be installed from:
+
+Also, on Windows some packages need to be installed from:
 https://www.lfd.uci.edu/~gohlke/pythonlibs/
 
 Requires FFMPEG:
