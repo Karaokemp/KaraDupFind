@@ -65,6 +65,12 @@ class SQLDatabase(Database):
         Database.FIELD_SONG_ID, Database.FIELD_OFFSET, Database.FIELD_HASH,
     )
 
+    CREATE_FINGERPRINTS_INDEX = """
+    CREATE INDEX hash_idx ON %s (%s);
+    """ % (
+        FINGERPRINTS_TABLENAME, Database.FIELD_HASH
+    )
+
     CREATE_SONGS_TABLE = """
         CREATE TABLE IF NOT EXISTS `%s` (
             `%s` INTEGER PRIMARY KEY,
@@ -150,6 +156,7 @@ class SQLDatabase(Database):
         with self.cursor() as cur:
             cur.execute(self.CREATE_SONGS_TABLE)
             cur.execute(self.CREATE_FINGERPRINTS_TABLE)
+            cur.execute(self.CREATE_FINGERPRINTS_INDEX)
             cur.execute(self.DELETE_UNFINGERPRINTED)
 
     def empty(self):
