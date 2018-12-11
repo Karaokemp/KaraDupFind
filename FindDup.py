@@ -21,7 +21,10 @@ import locale
 from dejavu import Dejavu
 from dejavu.recognize import FileRecognizer
 from Scrollable import Scrollable
-
+import base64
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 songs_path = None
 img_dir = None
@@ -46,7 +49,7 @@ def findDups():
     for idx, val in enumerate(files):
         ext = os.path.splitext(val)[1]
         #print(songs_path+'/'+val + "    |   "+ img_dir + str(idx) + ext)
-        copyfile(songs_path+'/'+val, img_dir +  str(idx) + ext)
+        copyfile(songs_path+'/'+val, img_dir +  base64.encodestring(val[:-4])[:-1] + ext)
 
     # Create dejavu object
     config = {
@@ -118,7 +121,8 @@ def findDups():
         extc = os.path.splitext(val)[1]
         print("==============================")
         print("Looking for duplicates for: "+val+" ("+str(idx)+")")
-        songs = djv.recognize(FileRecognizer, (img_dir+str(idx)+extc).replace('\\', '/'))
+        copyfile(songs_path + '/' + val, img_dir + "temp" + extc)
+        songs = djv.recognize(FileRecognizer, (img_dir + "temp" +extc).replace('\\', '/'))
         #djv.db.remove(idx)
         songs1, songs2 = itertools.tee(songs)
 
@@ -141,15 +145,17 @@ def findDups():
 
         for song in songs1:
             #print( song)
-            if int(song["song_name"])==idx:
+            song_name = base64.decodestring(song["song_name"])+val[-4:]
+            print(song_name)
+            if song_name==val:
                 continue
             if (song["confidence"])==1:
-                print(files[int(song["song_name"])]+" (identical)")
+                print(song_name+" (identical)")
                 checkboxesvars.append(StringVar(root))
                 #for i in range(50):
-                checkboxes.append(Checkbutton(root, text=files[int(song["song_name"])], variable=checkboxesvars[-1],
-                              anchor='w', onvalue=files[int(song["song_name"])], offvalue="",
-                              command=lambda var=checkboxesvars[-1], name=files[int(song["song_name"])] : change_identical_song(var, name)))
+                checkboxes.append(Checkbutton(root, text=song_name, variable=checkboxesvars[-1],
+                              anchor='w', onvalue=song_name, offvalue="",
+                              command=lambda var=checkboxesvars[-1], name=song_name : change_identical_song(var, name)))
                 checkboxes[-1].deselect()
                 checkboxes[-1].pack(fill=BOTH)
                 found_identical = True
@@ -159,14 +165,15 @@ def findDups():
         found_suspected = False
         for song in songs2:
             #print( song)
-            if int(song["song_name"])==idx:
+            song_name = base64.decodestring(song["song_name"]) + val[-4:]
+            if song_name==val:
                 continue
             if (song["confidence"])<1:
-                print(files[int(song["song_name"])]+" (suspected)")
+                print(song_name+" (suspected)")
                 checkboxesvars.append(StringVar(root))
-                checkboxes.append(Checkbutton(root, text=files[int(song["song_name"])]+ " (maybe)", variable=checkboxesvars[-1],
-                            onvalue=files[int(song["song_name"])], offvalue="", bg="#B3FCC0", anchor='w',
-                            command=lambda var=checkboxesvars[-1], name=files[int(song["song_name"])]: change_identical_song(var,name)))
+                checkboxes.append(Checkbutton(root, text=song_name+ " (maybe)", variable=checkboxesvars[-1],
+                            onvalue=song_name, offvalue="", bg="#B3FCC0", anchor='w',
+                            command=lambda var=checkboxesvars[-1], name=song_name: change_identical_song(var,name)))
                 checkboxes[-1].deselect()
                 checkboxes[-1].pack(fill=BOTH)
                 found_suspected = True
