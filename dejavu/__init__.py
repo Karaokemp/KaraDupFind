@@ -6,6 +6,7 @@ import os
 import traceback
 import sys
 import itertools
+from shutil import copyfile
 
 
 class Dejavu(object):
@@ -194,7 +195,7 @@ class Dejavu(object):
         return r.recognize(*options, **kwoptions)
 
 
-def _fingerprint_worker(filename, limit=None, song_name=None):
+def _fingerprint_worker(filename, limit=None, song_name=None, temp_path="DupsDatabase"):
     # Pool.imap sends arguments as tuples so we have to unpack
     # them ourself.
     try:
@@ -204,7 +205,19 @@ def _fingerprint_worker(filename, limit=None, song_name=None):
 
     songname, extension = os.path.splitext(os.path.basename(filename))
     song_name = song_name or songname
-    channels, Fs, file_hash = decoder.read(filename, limit)
+    temp_filename = filename
+
+    if temp_path: #copy to a temp file because ffmpeg doesn't support unicode (e.g. hebrew) file names
+        basename = os.path.basename(filename)
+        basepath = os.path.dirname(filename)
+        targetpath = basepath + "/" + temp_path + "/"
+        ext = os.path.splitext(filename)[1]
+        newname = targetpath + "temp" + ext
+        print("Copying " + filename +"  -->  "+newname)
+        copyfile(filename, newname)
+        temp_filename = newname
+
+    channels, Fs, file_hash = decoder.read(temp_filename, limit)
     result = set()
     channel_amount = len(channels)
 
