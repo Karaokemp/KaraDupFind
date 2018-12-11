@@ -35,7 +35,7 @@ def selectDir():
     Tk().withdraw()
     songs_path = tkFileDialog.askdirectory(initialdir = "~/Desktop/.",title = "Select Songs Location")
     #songs_dir = os.path.dirname(songs_path)
-    img_dir = songs_path + "/TempForDups" + "/"
+    img_dir = songs_path + "/DupsDatabase" + "/"
     mkpath(img_dir)
     dups_dir = songs_path + "/Duplicates" + "/"
     mkpath(dups_dir)
@@ -46,10 +46,10 @@ def findDups():
     files = [f for f in os.listdir(songs_path) if re.match(r'.*\.(?:wav|mp3|flac|m4a)', f)]
 
     # copy all files to a temp dir, with their index as their name, since there's no support for unicode (hebrew) file names
-    for idx, val in enumerate(files):
-        ext = os.path.splitext(val)[1]
-        #print(songs_path+'/'+val + "    |   "+ img_dir + str(idx) + ext)
-        copyfile(songs_path+'/'+val, img_dir +  base64.encodestring(val[:-4])[:-1] + ext)
+    for idx, lookupfile in enumerate(files):
+        ext = os.path.splitext(lookupfile)[1]
+        #print(songs_path+'/'+lookupfile + "    |   "+ img_dir + str(idx) + ext)
+        #copyfile(songs_path+'/'+lookupfile, img_dir +  base64.encodestring(lookupfile[:-4])[:-1] + ext)
 
     # Create dejavu object
     config = {
@@ -64,7 +64,7 @@ def findDups():
     print("Building database of songs...")
     # #fingerprint all files
     starttime = time.time()
-    djv.fingerprint_directory(img_dir.replace('\\', '/'), [".mp3",".wav",".m4a",".mp4",".flac"], 0)
+    djv.fingerprint_directory(songs_path.replace('\\', '/'), [".mp3",".wav",".m4a",".mp4",".flac"], 0)
     print("Done fingerprinting ("+str(int(time.time()-starttime))+" seconds)")
 
     #print(djv.db.get_num_fingerprints())
@@ -115,13 +115,13 @@ def findDups():
 
     starttime = time.time()
     found = 0
-    for idx, val in enumerate(files):
+    for lookupfile in files:
         #if idx>4:
         #    continue
-        extc = os.path.splitext(val)[1]
+        extc = os.path.splitext(lookupfile)[1]
         print("==============================")
-        print("Looking for duplicates for: "+val+" ("+str(idx)+")")
-        copyfile(songs_path + '/' + val, img_dir + "temp" + extc)
+        print("Looking for duplicates for: "+lookupfile)
+        copyfile(songs_path + '/' + lookupfile, img_dir + "temp" + extc)
         songs = djv.recognize(FileRecognizer, (img_dir + "temp" +extc).replace('\\', '/'))
         #djv.db.remove(idx)
         songs1, songs2 = itertools.tee(songs)
@@ -131,11 +131,11 @@ def findDups():
         l1 = Label(root, text="The following songs are duplicates:", bg="blue", fg="white", anchor='w')
         l1.pack(fill=BOTH)
 
-        #l2 = Label(root, text="Duplicates for "+val, bg="blue", fg="white", justify=LEFT)
+        #l2 = Label(root, text="Duplicates for "+lookupfile, bg="blue", fg="white", justify=LEFT)
         checkboxesvars.append(StringVar(root))
-        #l2 = Label(root, text="Duplicates for " + val, bg="blue", fg="white", justify=LEFT)
-        l2 = Checkbutton(root, text=val, variable=checkboxesvars[-1], anchor='w', onvalue=val, offvalue="",
-                         command=lambda var=checkboxesvars[-1], name=val: change_identical_song(var, name))
+        #l2 = Label(root, text="Duplicates for " + lookupfile, bg="blue", fg="white", justify=LEFT)
+        l2 = Checkbutton(root, text=lookupfile, variable=checkboxesvars[-1], anchor='w', onvalue=lookupfile, offvalue="",
+                         command=lambda var=checkboxesvars[-1], name=lookupfile: change_identical_song(var, name))
         checkboxes.append(l2)
         l2.deselect()
         l2.pack(fill=BOTH)
@@ -145,9 +145,9 @@ def findDups():
 
         for song in songs1:
             #print( song)
-            song_name = base64.decodestring(song["song_name"])+val[-4:]
+            song_name = song["song_name"]+lookupfile[-4:]
             print(song_name)
-            if song_name==val:
+            if song_name==lookupfile:
                 continue
             if (song["confidence"])==1:
                 print(song_name+" (identical)")
@@ -165,8 +165,8 @@ def findDups():
         found_suspected = False
         for song in songs2:
             #print( song)
-            song_name = base64.decodestring(song["song_name"]) + val[-4:]
-            if song_name==val:
+            song_name = song["song_name"] + lookupfile[-4:]
+            if song_name==lookupfile:
                 continue
             if (song["confidence"])<1:
                 print(song_name+" (suspected)")
