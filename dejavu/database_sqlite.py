@@ -66,7 +66,7 @@ class SQLDatabase(Database):
     )
 
     CREATE_FINGERPRINTS_INDEX = """
-    CREATE INDEX hash_idx ON %s (%s);
+    CREATE INDEX IF NOT EXISTS hash_idx ON %s (%s);
     """ % (
         FINGERPRINTS_TABLENAME, Database.FIELD_HASH
     )
@@ -88,7 +88,7 @@ class SQLDatabase(Database):
             (X'%%s', %%s, %%s);
     """ % (FINGERPRINTS_TABLENAME, Database.FIELD_HASH, Database.FIELD_SONG_ID, Database.FIELD_OFFSET)
 
-    INSERT_SONG = "INSERT INTO %s (%s, %s) values (%%s, X'%%s');" % (
+    INSERT_SONG = "INSERT INTO %s (%s, %s) values ('%%s', X'%%s');" % (
         SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1)
 
     # selects
