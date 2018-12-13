@@ -35,6 +35,7 @@ DEFAULT_FAN_VALUE = 15
 # Minimum amplitude in spectrogram in order to be considered a peak.
 # This can be raised to reduce number of fingerprints, but can negatively
 # affect accuracy.
+#DEFAULT_AMP_MIN = 10
 DEFAULT_AMP_MIN = 50
 
 ######################################################################

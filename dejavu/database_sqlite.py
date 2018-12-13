@@ -5,7 +5,6 @@ import Queue
 import sqlite3
 
 from dejavu.database import Database
-import binascii
 
 
 class SQLDatabase(Database):
@@ -90,6 +89,12 @@ class SQLDatabase(Database):
 
     INSERT_SONG = "INSERT INTO %s (%s, %s) values ('%%s', X'%%s');" % (
         SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1)
+    
+    DELETE_SONG = "DELETE FROM %s WHERE %s='%%s' AND %s=X'%%s';" % (
+        SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1)
+
+    DELETE_FINGERPRINTS = "DELETE FROM %s WHERE %s=%%s;" % (
+        FINGERPRINTS_TABLENAME, Database.FIELD_SONG_ID)
 
     # selects
     SELECT = """
@@ -108,6 +113,10 @@ class SQLDatabase(Database):
     SELECT_SONG = """
         SELECT %s, HEX(%s) as %s FROM %s WHERE %s = ?;
     """ % (Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1, Database.FIELD_FILE_SHA1, SONGS_TABLENAME, Database.FIELD_SONG_ID)
+
+    SELECT_SONG_BY_FILE = """
+        SELECT %s FROM %s WHERE %s='%%s' AND %s=X'%%s';
+    """ % (Database.FIELD_SONG_ID, SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1)
 
     SELECT_NUM_FINGERPRINTS = """
         SELECT COUNT(*) as n FROM %s
@@ -228,6 +237,15 @@ class SQLDatabase(Database):
             row = cur.fetchone()
             return dict(zip(row.keys(), row))
 
+    def get_song_by_file(self, songname, file_hash):
+        """
+        Returns song ID.
+        """
+        with self.cursor() as cur:
+            cur.execute(self.SELECT_SONG_BY_FILE % (songname, file_hash))
+            row = cur.fetchone()
+            return row[0]
+
     def insert(self, hash, sid, offset):
         """
         Insert a (sha1, song_id, offset) row into database.
@@ -242,6 +260,12 @@ class SQLDatabase(Database):
         with self.cursor() as cur:
             cur.execute(self.INSERT_SONG % (songname,file_hash))
             return cur.lastrowid
+        
+    def delete_song(self, songname, file_hash):
+        with self.cursor() as cur:
+            sid = self.get_song_by_file(songname,file_hash)
+            cur.execute(self.DELETE_SONG % (songname, file_hash))
+            cur.execute(self.DELETE_FINGERPRINTS % sid)
 
     def query(self, hash):
         """

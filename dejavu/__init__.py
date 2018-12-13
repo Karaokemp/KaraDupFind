@@ -7,7 +7,9 @@ import traceback
 import sys
 import itertools
 from shutil import copyfile
+from dejavu.database_sqlite import SQLDatabase ## remove for non-sqlite support
 
+output_encoding = "utf-8" #sys.stdout.encoding
 
 class Dejavu(object):
 
@@ -24,9 +26,15 @@ class Dejavu(object):
         self.config = config
 
         # initialize db
-        db_cls = get_database(config.get("database_type", None))
 
-        self.db = db_cls(**config.get("database", {}))
+        ## uncomment for non-sqlite support
+        #db_cls = get_database(config.get("database_type", None))
+        #self.db = db_cls(**config.get("database", {}))
+
+        ## comment for non-sqlite support
+        self.db = SQLDatabase(**config.get("database", {}))
+
+
         self.db.setup()
 
         # if we should limit seconds fingerprinted,
@@ -61,7 +69,7 @@ class Dejavu(object):
 
             # don't refingerprint already fingerprinted files
             if decoder.unique_hash(filename) in self.songhashes_set:
-                print "%s already fingerprinted, continuing..." % filename
+                print "%s already fingerprinted, continuing..." % filename.encode(output_encoding)
                 continue
 
             filenames_to_fingerprint.append(filename)
@@ -120,6 +128,25 @@ class Dejavu(object):
             self.db.insert_hashes(sid, hashes)
             self.db.set_song_fingerprinted(sid)
             self.get_fingerprinted_songs()
+
+    def delete_song(self, filepath, song_name=None, temp_path="DupsDatabase"):
+        songname = decoder.path_to_songname(filepath)
+        song_name = song_name or songname
+        temp_filename = filepath
+
+        try:
+            if temp_path:  # copy to a temp file because ffmpeg doesn't support unicode (e.g. hebrew) file names
+                basepath = os.path.dirname(filepath)
+                targetpath = basepath + "/" + temp_path + "/"
+                ext = os.path.splitext(filepath)[1]
+                newname = targetpath + "temp" + ext
+                copyfile(filepath, newname)
+                temp_filename = newname
+
+            file_hash = decoder.unique_hash(temp_filename)
+            self.db.delete_song(song_name, file_hash)
+        except IOError:
+            pass
 
     def find_matches(self, samples, Fs=fingerprint.DEFAULT_FS):
         hashes = fingerprint.fingerprint(samples, Fs=Fs)
@@ -213,7 +240,12 @@ def _fingerprint_worker(filename, limit=None, song_name=None, temp_path="DupsDat
         targetpath = basepath + "/" + temp_path + "/"
         ext = os.path.splitext(filename)[1]
         newname = targetpath + "temp" + ext
-        print("Copying " + filename +"  -->  "+newname)
+
+        try:
+            print("Copying " + filename +"  -->  "+newname)
+        except UnicodeEncodeError:
+            pass
+
         copyfile(filename, newname)
         temp_filename = newname
 
@@ -225,10 +257,10 @@ def _fingerprint_worker(filename, limit=None, song_name=None, temp_path="DupsDat
         # TODO: Remove prints or change them into optional logging.
         print("Fingerprinting channel %d/%d for %s" % (channeln + 1,
                                                        channel_amount,
-                                                       filename))
+                                                       filename.encode(output_encoding)))
         hashes = fingerprint.fingerprint(channel, Fs=Fs)
         print("Finished channel %d/%d for %s" % (channeln + 1, channel_amount,
-                                                 filename))
+                                                 filename.encode(output_encoding)))
         result |= set(hashes)
 
     return song_name, result, file_hash
