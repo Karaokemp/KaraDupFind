@@ -1,5 +1,7 @@
 """ Requires Python 2.7 """
 
+from dejavu import Dejavu
+from dejavu.recognize import FileRecognizer
 from Tkinter import *
 import time
 #from Tkinter import filedialog  ## python3.6
@@ -18,13 +20,15 @@ from shutil import copyfile
 import locale
 #import sqlite3
 #import subprocess
-from dejavu import Dejavu
-from dejavu.recognize import FileRecognizer
 from Scrollable import Scrollable
-import base64
+#import base64
+
+## support unicode (hebrew file names)
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
+
+output_encoding = "utf-8" #sys.stdout.encoding
 
 songs_path = None
 img_dir = None
@@ -50,6 +54,8 @@ def findDups():
         ext = os.path.splitext(lookupfile)[1]
         #print(songs_path+'/'+lookupfile + "    |   "+ img_dir + str(idx) + ext)
         #copyfile(songs_path+'/'+lookupfile, img_dir +  base64.encodestring(lookupfile[:-4])[:-1] + ext)
+
+    remove_temporary_files()
 
     # Create dejavu object
     config = {
@@ -77,7 +83,8 @@ def findDups():
         for checkboxvar in checkboxesvars:
             if checkboxvar.get():
                 try:
-                    print("Moving "+songs_path +"/"+checkboxvar.get())
+                    print("Moving "+songs_path.encode(output_encoding) +"/"+checkboxvar.get().encode(output_encoding))
+                    djv.delete_song(songs_path +"/"+checkboxvar.get())
                     os.rename(songs_path +"/"+checkboxvar.get(), dups_dir+checkboxvar.get())
                     os.rename(songs_path + "/" + checkboxvar.get()[0:-4]+".cdg", dups_dir + checkboxvar.get()[0:-4]+".cdg")
                 except OSError:
@@ -115,12 +122,17 @@ def findDups():
 
     starttime = time.time()
     found = 0
+    already_checked = []
     for lookupfile in files:
+
+        if lookupfile in already_checked:
+            continue
+
         #if idx>4:
         #    continue
         extc = os.path.splitext(lookupfile)[1]
         print("==============================")
-        print("Looking for duplicates for: "+lookupfile)
+        print("Looking for duplicates for: "+lookupfile.encode(output_encoding))
         copyfile(songs_path + '/' + lookupfile, img_dir + "temp" + extc)
         songs = djv.recognize(FileRecognizer, (img_dir + "temp" +extc).replace('\\', '/'))
         #djv.db.remove(idx)
@@ -146,11 +158,11 @@ def findDups():
         for song in songs1:
             #print( song)
             song_name = song["song_name"]+lookupfile[-4:]
-            print(song_name)
             if song_name==lookupfile:
                 continue
             if (song["confidence"])==1:
-                print(song_name+" (identical)")
+                print(song_name.encode(output_encoding)+" (identical)")
+                already_checked.append(song_name)
                 checkboxesvars.append(StringVar(root))
                 #for i in range(50):
                 checkboxes.append(Checkbutton(root, text=song_name, variable=checkboxesvars[-1],
@@ -168,8 +180,10 @@ def findDups():
             song_name = song["song_name"] + lookupfile[-4:]
             if song_name==lookupfile:
                 continue
+            if song_name in already_checked:
+                continue
             if (song["confidence"])<1:
-                print(song_name+" (suspected)")
+                print(song_name.encode(output_encoding)+" (suspected)")
                 checkboxesvars.append(StringVar(root))
                 checkboxes.append(Checkbutton(root, text=song_name+ " (maybe)", variable=checkboxesvars[-1],
                             onvalue=song_name, offvalue="", bg="#B3FCC0", anchor='w',
@@ -186,12 +200,11 @@ def findDups():
                 l2.pack_forget()
                 found -= 1
 
+        already_checked.append(lookupfile)
+
     print("\n"+str(found)+" files have duplicates (analysis took " + str(int(time.time() - starttime)) + " seconds)")
 
-    # remove temporary files. TODO remove the whole directory, including the database
-    for file in os.listdir(img_dir):
-        if file.endswith(".mp3") or file.endswith(".wav") or file.endswith(".m4a") or file.endswith(".mp4") or file.endswith(".flac"):
-            os.remove(os.path.join(img_dir, file))
+    remove_temporary_files()
 
     def win_quit():
         print("Goodbye")
@@ -236,6 +249,13 @@ def findDups():
                 (x.name.endswith(".mp3") or x.name.endswith(".wav")):
             print(x, " ", x.name, " ", x.suffix)
 '''
+
+def remove_temporary_files():
+    for file in os.listdir(img_dir):
+        if file.endswith(".mp3") or file.endswith(".wav") or file.endswith(".m4a") or file.endswith(
+            ".mp4") or file.endswith(".flac"):
+            os.remove(os.path.join(img_dir, file))
+
 
 def main():
     selectDir()
