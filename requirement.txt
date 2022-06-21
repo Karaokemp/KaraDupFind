@@ -13,7 +13,7 @@ kiwisolver==1.0.1
 matplotlib==2.2.3
 mutagen==1.21
 mutagenwrapper==0.0.5
-numpy==1.15.3
+numpy==1.22.0
 packaging==18.0
 PyAudio==0.2.11
 -e git+https://github.com/tyiannak/pyAudioAnalysis.git@cee48de0df203a104a03195b41a78c2adcf9879d#egg=pyAudioAnalysis
