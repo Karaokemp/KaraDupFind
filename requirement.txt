@@ -1,6 +1,6 @@
 audioread==2.1.6
 backports.functools-lru-cache==1.5
-certifi==2018.10.15
+certifi==2022.12.7
 cffi==1.11.5
 chardet==3.0.4
 cx-Freeze==5.1.1
